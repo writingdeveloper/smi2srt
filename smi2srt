@@ -4,6 +4,7 @@ import re
 import cchardet
 import os
 import argparse
+import shutil
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-r", "--remove_original",
@@ -122,14 +123,24 @@ for p, w, f in os.walk(PATH):
                     lang_code = lang.replace('CC', '')
                     SUFFIX = '.'+(lang_code.lower() if len(
                         lang_code) == 2 else lang_code[:2].lower() + '_' + lang_code[2:].upper())
+                    if SUFFIX == '.kr':
+                        SUFFIX = '.ko'
                     srt_file = codecs.open(os.path.join(p, os.path.splitext(
                         file_name)[0]+SUFFIX+'.srt'), 'w', encoding='utf-8')
                     srt_file.write(convert(data, lang))
                 success.append(file_name)
+                if not os.path.exists(os.path.join(p, 'smi')):
+                    os.makedirs(os.path.join(p, 'smi'))
+                shutil.move(os.path.join(p, file_name), os.path.join(p, 'smi', file_name))
                 if REMOVE_OPTION:
                     os.remove(os.path.join(p, file_name))
             except:
                 fail.append(file_name)
+        elif file_name[-4:].lower() == '.srt' and file_name[-6:-4].lower() != 'ko':
+            print('SRT 데이터' + os.path.join(p, file_name))
+            exist_srt = os.path.join(p, file_name)
+            os.rename(exist_srt, os.path.join(p, os.path.splitext(
+                        file_name)[0]+'.ko.srt'))
 
 smi_list = list(set(success) | set(fail))
 print('\nfound .smi subtitles:')
